@@ -1,8 +1,12 @@
 import 'dart:convert';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'ba.dart';
+import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
+import './model.dart';
+import './utils.dart';
+import './ba.dart';
 
 final __a = String.fromCharCodes(Ba.abtoa("d3gu:j!w:\$!w:\$!x.nh5eg=="));
 final base = "https://$__a";
@@ -189,7 +193,48 @@ class DetailPage extends StatefulWidget {
 class _DetailPageState extends State<DetailPage> {
   final Map<String, dynamic> arg;
 
+  late final AudioPlayer _player;
+  bool _isInitialized = false;
+  String _lastFilename = '';
+  sherpa_onnx.OfflineTts? _tts;
+
   _DetailPageState(this.arg);
+
+  Future<void> _init() async {
+    if (!_isInitialized) {
+      sherpa_onnx.initBindings();
+
+      _tts?.free();
+      _tts = await createOfflineTts();
+
+      _player = AudioPlayer();
+
+      _isInitialized = true;
+    }
+  }
+
+  Future<void> tts(String text) async {
+    await _init();
+    await _player.stop();
+
+    var sid = 0;
+    var _speed = 1.0;
+
+    final audio = _tts!.generate(text: text, sid: sid, speed: _speed);
+    final suffix = '-sid-$sid-speed-${_speed.toStringAsPrecision(2)}';
+    final filename = await generateWaveFilename(suffix);
+
+    final ok = sherpa_onnx.writeWave(
+      filename: filename,
+      samples: audio.samples,
+      sampleRate: audio.sampleRate,
+    );
+
+    if (ok) {
+      _lastFilename = filename;
+      await _player.play(DeviceFileSource(_lastFilename));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -207,7 +252,11 @@ class _DetailPageState extends State<DetailPage> {
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () async {
+                    var text =
+                        "${arg['title']}，${arg['dynasty']}，${arg['author']}，${arg['content'].toString().replaceAll("<.*?>", "")}";
+                    await tts(text);
+                  },
                   child: Icon(Icons.play_circle, size: 35),
                 ),
                 GestureDetector(
