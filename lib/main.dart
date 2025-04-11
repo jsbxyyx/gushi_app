@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
@@ -217,7 +218,7 @@ class _DetailPageState extends State<DetailPage> {
     await _init();
     await _player.stop();
 
-    var sid = 0;
+    var sid = 47; // 50
     var _speed = 1.0;
 
     final audio = _tts!.generate(text: text, sid: sid, speed: _speed);
@@ -231,8 +232,15 @@ class _DetailPageState extends State<DetailPage> {
     );
 
     if (ok) {
+      if (_lastFilename != "") File(_lastFilename).delete();
       _lastFilename = filename;
       await _player.play(DeviceFileSource(_lastFilename));
+    } else {
+      setState(() {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(backgroundColor: Colors.red, content: Text("播放音频失败")),
+        );
+      });
     }
   }
 
