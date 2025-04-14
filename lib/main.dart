@@ -196,7 +196,6 @@ class _DetailPageState extends State<DetailPage> {
 
   late final AudioPlayer _player;
   bool _isInitialized = false;
-  String _lastFilename = '';
   sherpa_onnx.OfflineTts? _tts;
 
   _DetailPageState(this.arg);
@@ -218,12 +217,18 @@ class _DetailPageState extends State<DetailPage> {
     await _init();
     await _player.stop();
 
-    var sid = 47; // 50
-    var _speed = 1.0;
+    var sid = 50; // 50
+    var speed = 0.6;
 
-    final audio = _tts!.generate(text: text, sid: sid, speed: _speed);
-    final suffix = '-sid-$sid-speed-${_speed.toStringAsPrecision(2)}';
-    final filename = await generateWaveFilename(suffix);
+    final name = "${arg['title'].toString().trim()}-${arg['dynasty'].toString().trim()}-${arg['author'].toString().trim()}-$speed-$sid";
+    final filename = await generateWaveFilename2(name);
+
+    if (await File(filename).exists()) {
+      await _player.play(DeviceFileSource(filename));
+      return;
+    }
+
+    final audio = _tts!.generate(text: text, sid: sid, speed: speed);
 
     final ok = sherpa_onnx.writeWave(
       filename: filename,
@@ -232,9 +237,7 @@ class _DetailPageState extends State<DetailPage> {
     );
 
     if (ok) {
-      if (_lastFilename != "") File(_lastFilename).delete();
-      _lastFilename = filename;
-      await _player.play(DeviceFileSource(_lastFilename));
+      await _player.play(DeviceFileSource(filename));
     } else {
       setState(() {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -262,7 +265,7 @@ class _DetailPageState extends State<DetailPage> {
                 GestureDetector(
                   onTap: () async {
                     var text =
-                        "${arg['title']}，${arg['dynasty']}，${arg['author']}，${arg['content'].toString().replaceAll("<.*?>", "")}";
+                        "${arg['title']}\n${arg['dynasty']}\n${arg['author']}\n${arg['content'].toString().replaceAll("<.*?>", "")}";
                     await tts(text);
                   },
                   child: Icon(Icons.play_circle, size: 35),

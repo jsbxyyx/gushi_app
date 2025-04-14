@@ -25,7 +25,8 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
   String voices = 'voices.bin'; // for Kokoro only
   String ruleFsts = '';
   String ruleFars = '';
-  String lexicon = 'kokoro-multi-lang-v1_0/lexicon-zh.txt,kokoro-multi-lang-v1_0/lexicon-us-en.txt';
+  // String lexicon = 'kokoro-multi-lang-v1_0/lexicon-zh.txt,kokoro-multi-lang-v1_0/lexicon-us-en.txt';
+  String lexicon = 'kokoro-multi-lang-v1_0/lexicon-zh.txt';
   String dataDir = 'kokoro-multi-lang-v1_0/espeak-ng-data';
   String dictDir = 'kokoro-multi-lang-v1_0/dict';
 

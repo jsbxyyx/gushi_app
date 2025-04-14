@@ -15,6 +15,11 @@ Future<String> generateWaveFilename([String suffix = '']) async {
   return p.join(directory.path, filename);
 }
 
+Future<String> generateWaveFilename2(filename) async {
+  final Directory directory = await getApplicationDocumentsDirectory();
+  return p.join(directory.path, "$filename.wav");
+}
+
 // https://stackoverflow.com/questions/68862225/flutter-how-to-get-all-files-from-assets-folder-in-one-list
 Future<List<String>> getAllAssetFiles() async {
   final AssetManifest assetManifest = await AssetManifest.loadFromAssetBundle(
