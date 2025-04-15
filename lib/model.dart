@@ -20,15 +20,20 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
   // See https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/flutter/generate-tts.py
   // for details
 
-  String modelDir = 'kokoro-multi-lang-v1_0';
-  String modelName = 'model.onnx';
-  String voices = 'voices.bin'; // for Kokoro only
-  String ruleFsts = '';
+  // matcha
+  // https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
+  // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
+
+  String modelDir = 'matcha-icefall-zh-baker';
+  String modelName = 'model-steps-3.onnx';
+  String vocoder = 'vocos-22khz-univ.onnx';
+  String voices = ''; // for Kokoro only
+  String ruleFsts =
+      '$modelDir/phone.fst,$modelDir/date.fst,$modelDir/number.fst';
   String ruleFars = '';
-  // String lexicon = 'kokoro-multi-lang-v1_0/lexicon-zh.txt,kokoro-multi-lang-v1_0/lexicon-us-en.txt';
-  String lexicon = 'kokoro-multi-lang-v1_0/lexicon-zh.txt';
-  String dataDir = 'kokoro-multi-lang-v1_0/espeak-ng-data';
-  String dictDir = 'kokoro-multi-lang-v1_0/dict';
+  String lexicon = 'lexicon.txt';
+  String dataDir = '';
+  String dictDir = '$modelDir/dict';
 
   // You can select an example below and change it accordingly to match your
   // selected tts model
@@ -105,11 +110,16 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
   // ============================================================
   if (modelName == '') {
     throw Exception(
-        'You are supposed to select a model by changing the code before you run the app');
+      'You are supposed to select a model by changing the code before you run the app',
+    );
   }
 
   final Directory directory = await getApplicationDocumentsDirectory();
   modelName = p.join(directory.path, modelDir, modelName);
+
+  if (vocoder != '') {
+    vocoder = p.join(directory.path, modelDir, vocoder);
+  }
 
   if (ruleFsts != '') {
     final all = ruleFsts.split(',');
@@ -153,6 +163,7 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
     voices = p.join(directory.path, modelDir, voices);
   }
 
+  late final sherpa_onnx.OfflineTtsMatchaModelConfig matcha;
   late final sherpa_onnx.OfflineTtsVitsModelConfig vits;
   late final sherpa_onnx.OfflineTtsKokoroModelConfig kokoro;
 
@@ -167,13 +178,26 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
       lexicon: lexicon,
     );
   } else {
-    vits = sherpa_onnx.OfflineTtsVitsModelConfig(
-      model: modelName,
-      lexicon: lexicon,
-      tokens: tokens,
-      dataDir: dataDir,
-      dictDir: dictDir,
-    );
+    if (vocoder != '') {
+      matcha = sherpa_onnx.OfflineTtsMatchaModelConfig(
+        acousticModel: modelName,
+        vocoder: vocoder,
+        lexicon: lexicon,
+        tokens: tokens,
+        dataDir: dataDir,
+        dictDir: dictDir,
+      );
+      vits = sherpa_onnx.OfflineTtsVitsModelConfig();
+    } else {
+      matcha = sherpa_onnx.OfflineTtsMatchaModelConfig();
+      vits = sherpa_onnx.OfflineTtsVitsModelConfig(
+        model: modelName,
+        lexicon: lexicon,
+        tokens: tokens,
+        dataDir: dataDir,
+        dictDir: dictDir,
+      );
+    }
 
     kokoro = sherpa_onnx.OfflineTtsKokoroModelConfig();
   }
@@ -181,6 +205,7 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
   final modelConfig = sherpa_onnx.OfflineTtsModelConfig(
     vits: vits,
     kokoro: kokoro,
+    matcha: matcha,
     numThreads: 2,
     debug: true,
     provider: 'cpu',

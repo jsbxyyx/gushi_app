@@ -218,7 +218,7 @@ class _DetailPageState extends State<DetailPage> {
     await _player.stop();
 
     var sid = 50; // 50
-    var speed = 0.6;
+    var speed = 0.8;
 
     final name = "${arg['title'].toString().trim()}-${arg['dynasty'].toString().trim()}-${arg['author'].toString().trim()}-$speed-$sid";
     final filename = await generateWaveFilename2(name);
@@ -265,7 +265,7 @@ class _DetailPageState extends State<DetailPage> {
                 GestureDetector(
                   onTap: () async {
                     var text =
-                        "${arg['title']}\n${arg['dynasty']}\n${arg['author']}\n${arg['content'].toString().replaceAll("<.*?>", "")}";
+                        "${arg['title']}。${arg['dynasty']}。${arg['author']}。${arg['content'].toString().replaceAll("<.*?>", "")}";
                     await tts(text);
                   },
                   child: Icon(Icons.play_circle, size: 35),

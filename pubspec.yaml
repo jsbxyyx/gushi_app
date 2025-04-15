@@ -60,9 +60,13 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
-    - assets/kokoro-multi-lang-v1_0/
-    - assets/kokoro-multi-lang-v1_0/dict/
-    - assets/kokoro-multi-lang-v1_0/espeak-ng-data/
+#    - assets/kokoro-multi-lang-v1_0/
+#    - assets/kokoro-multi-lang-v1_0/dict/
+#    - assets/kokoro-multi-lang-v1_0/espeak-ng-data/
+#    - assets/vits-icefall-zh-aishell3/
+    - assets/matcha-icefall-zh-baker/
+    - assets/matcha-icefall-zh-baker/dict/
+    - assets/matcha-icefall-zh-baker/dict/pos_dict/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
