@@ -122,7 +122,7 @@ class TTSClient {
     print("ws url : $url");
     print("ws headers : $wss_headers");
 
-    Completer<List<int>> c = Completer();
+    Completer<List<int>> completer = Completer();
     List<int> result = [];
 
     socket.connection.listen((state) {
@@ -156,11 +156,11 @@ class TTSClient {
         result.addAll(audioData);
       } else if (data is String) {
         if (data.contains("turn.end")) {
-          c.complete(result);
+          completer.complete(result);
         }
       }
     }, onError: (error) => print(error));
 
-    return c.future;
+    return completer.future;
   }
 }

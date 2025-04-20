@@ -245,7 +245,7 @@ class _DetailPageState extends State<DetailPage> {
                 GestureDetector(
                   onTap: () async {
                     var text =
-                        "${arg['title']}\n${arg['dynasty']}\n${arg['author']}\n${arg['content'].toString().replaceAll("<.*?>", "")}";
+                        "${arg['title']}。${arg['dynasty']}。${arg['author']}。${arg['content'].toString().replaceAll("<.*?>", "")}";
                     await tts(text);
                   },
                   child: Icon(Icons.play_circle, size: 35),

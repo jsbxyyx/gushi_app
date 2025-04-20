@@ -45,4 +45,4 @@ app.*.map.json
 /android/app/release
 
 #
-kokoro-multi-lang-v1_0/
+assets/
