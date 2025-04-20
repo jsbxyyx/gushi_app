@@ -184,6 +184,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "4.1.2"
+  intl:
+    dependency: "direct main"
+    description:
+      name: intl
+      sha256: "3df61194eb431efc39c4ceba583b95633a403f46c9fd341e550ce0bfa50e9aa5"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.20.2"
   leak_tracker:
     dependency: transitive
     description:
@@ -312,54 +320,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.1.8"
-  sherpa_onnx:
-    dependency: "direct main"
-    description:
-      name: sherpa_onnx
-      sha256: "258174635084c8c2ebc54ade6be1d8ce5c40c81e942b6b385d9ed167c6af7af8"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "1.11.3"
-  sherpa_onnx_android:
-    dependency: transitive
-    description:
-      name: sherpa_onnx_android
-      sha256: "505a6d630cedb98d7f43910f6f26283259cbd99492dbad339279815fbd8074fd"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "1.11.3"
-  sherpa_onnx_ios:
-    dependency: transitive
-    description:
-      name: sherpa_onnx_ios
-      sha256: "2d246a539c13dfdc9a19ccf95f22e5f130c1d1d8ef65b73f87e5bb4d6ad0495a"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "1.11.3"
-  sherpa_onnx_linux:
-    dependency: transitive
-    description:
-      name: sherpa_onnx_linux
-      sha256: c2e26220e170e36fc690dd7182db73724b804ec9b5b1bd6514fef68af3b3ee7c
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "1.11.3"
-  sherpa_onnx_macos:
-    dependency: transitive
-    description:
-      name: sherpa_onnx_macos
-      sha256: "7dcf632af8f1721de083e7ef9f9977dfe254e839b1237aaf8dc99ed973e51c5a"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "1.11.3"
-  sherpa_onnx_windows:
-    dependency: transitive
-    description:
-      name: sherpa_onnx_windows
-      sha256: "9a42d0d0163a558e5781b62515434ea7d1bd3c3fc6b9df9c9de9e67c7382d0f9"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "1.11.3"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -438,7 +398,7 @@ packages:
     source: hosted
     version: "1.4.0"
   uuid:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: uuid
       sha256: a5be9ef6618a7ac1e964353ef476418026db906c4facdedaa299b7a2e71690ff
@@ -469,6 +429,30 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.1.1"
+  web_socket:
+    dependency: transitive
+    description:
+      name: web_socket
+      sha256: bfe6f435f6ec49cb6c01da1e275ae4228719e59a6b067048c51e72d9d63bcc4b
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.0.0"
+  web_socket_channel:
+    dependency: transitive
+    description:
+      name: web_socket_channel
+      sha256: d645757fb0f4773d602444000a8131ff5d48c9e47adfe9772652dd1a4f2d45c8
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "3.0.3"
+  web_socket_client:
+    dependency: "direct main"
+    description:
+      name: web_socket_client
+      sha256: "22264cb5143e9bb55c943d6b051d207fdd6470ffb77ee45778c9a7a0fda100bc"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.2.0"
   xdg_directories:
     dependency: transitive
     description:

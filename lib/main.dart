@@ -4,9 +4,10 @@ import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
-import './model.dart';
-import './utils.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+import './tts.dart';
+
 import './ba.dart';
 
 final __a = String.fromCharCodes(Ba.abtoa("d3gu:j!w:\$!w:\$!x.nh5eg=="));
@@ -196,19 +197,12 @@ class _DetailPageState extends State<DetailPage> {
 
   late final AudioPlayer _player;
   bool _isInitialized = false;
-  sherpa_onnx.OfflineTts? _tts;
 
   _DetailPageState(this.arg);
 
   Future<void> _init() async {
     if (!_isInitialized) {
-      sherpa_onnx.initBindings();
-
-      _tts?.free();
-      _tts = await createOfflineTts();
-
       _player = AudioPlayer();
-
       _isInitialized = true;
     }
   }
@@ -217,33 +211,19 @@ class _DetailPageState extends State<DetailPage> {
     await _init();
     await _player.stop();
 
-    var sid = 50; // 50
-    var speed = 0.6;
-
-    final name = "${arg['title'].toString().trim()}-${arg['dynasty'].toString().trim()}-${arg['author'].toString().trim()}-$speed-$sid";
-    final filename = await generateWaveFilename2(name);
-
-    if (await File(filename).exists()) {
+    final Directory dir = await getApplicationDocumentsDirectory();
+    var filename = p.join(dir.path, "${arg['title']}-${arg['dynasty']}-${arg["author"]}.mp3");
+    print("filename: $filename");
+    var file = File(filename);
+    if (await file.exists()) {
       await _player.play(DeviceFileSource(filename));
       return;
-    }
-
-    final audio = _tts!.generate(text: text, sid: sid, speed: speed);
-
-    final ok = sherpa_onnx.writeWave(
-      filename: filename,
-      samples: audio.samples,
-      sampleRate: audio.sampleRate,
-    );
-
-    if (ok) {
-      await _player.play(DeviceFileSource(filename));
     } else {
-      setState(() {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(backgroundColor: Colors.red, content: Text("播放音频失败")),
-        );
-      });
+      var audioData = await TTSClient.tts(text);
+      var sink = file.openWrite();
+      sink.add(audioData);
+      await sink.close();
+      await _player.play(DeviceFileSource(filename));
     }
   }
 
