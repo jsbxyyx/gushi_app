@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import 'package:web_socket_client/web_socket_client.dart';
@@ -23,14 +24,14 @@ class TTSClient {
   static String chromium_major_version = chromium_full_version.split(".")[0];
   static String sec_ms_gec_version = "1-${chromium_full_version}";
 
-  static Map<String, dynamic> base_headers = {
+  static Map<String, String> base_headers = {
     "User-Agent":
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$chromium_major_version.0.0.0 Safari/537.36 Edg/$chromium_major_version.0.0.0",
     "Accept-Encoding": "gzip, deflate, br",
     "Accept-Language": "en-US,en;q=0.9",
   };
 
-  static Map<String, dynamic> wss_headers = {
+  static Map<String, String> wss_headers = {
     "Pragma": "no-cache",
     "Cache-Control": "no-cache",
     "Origin": "chrome-extension://jdiccldimpdaibmpdkjnbmckianbfold",
@@ -38,7 +39,7 @@ class TTSClient {
     ...base_headers,
   };
 
-  static Map<String, dynamic> voice_headers = {
+  static Map<String, String> voice_headers = {
     "Authority": "speech.platform.bing.com",
     "Sec-CH-UA":
         "\" Not;A Brand\";v=\"99\", \"Microsoft Edge\";v=\"$chromium_major_version\", \"Chromium\";v=\"$chromium_major_version\"",
@@ -162,5 +163,14 @@ class TTSClient {
     }, onError: (error) => print(error));
 
     return completer.future;
+  }
+
+  static Future<List<dynamic>> voiceList() async {
+    var response = await http.get(
+      Uri.parse(voice_list_url),
+      headers: voice_headers
+    );
+    var result = jsonDecode(utf8.decode(response.bodyBytes));
+    return result;
   }
 }

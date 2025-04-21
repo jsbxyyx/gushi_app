@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -176,6 +177,17 @@ class _MyHomePageState extends State<MyHomePage>
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        child: CircleAvatar(child: Icon(Icons.settings)),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (BuildContext context) => SettingsPage(),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -198,12 +210,19 @@ class _DetailPageState extends State<DetailPage> {
   late final AudioPlayer _player;
   bool _isInitialized = false;
 
+  bool _playing = false;
+
   _DetailPageState(this.arg);
 
   Future<void> _init() async {
     if (!_isInitialized) {
       _player = AudioPlayer();
       _isInitialized = true;
+      _player.onPlayerStateChanged.listen((state) {
+        setState(() {
+          _playing = (state == PlayerState.playing);
+        });
+      });
     }
   }
 
@@ -211,8 +230,9 @@ class _DetailPageState extends State<DetailPage> {
     await _init();
     await _player.stop();
 
-    final Directory dir = await getApplicationDocumentsDirectory();
-    var filename = p.join(dir.path, "${arg['title']}-${arg['dynasty']}-${arg["author"]}.mp3");
+    var filename = await generateFilename(
+      "${arg['title']}-${arg['dynasty']}-${arg["author"]}.mp3",
+    );
     print("filename: $filename");
     var file = File(filename);
     if (await file.exists()) {
@@ -242,18 +262,22 @@ class _DetailPageState extends State<DetailPage> {
                   arg['title'],
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
-                GestureDetector(
-                  onTap: () async {
-                    var text =
-                        "${arg['title']}。${arg['dynasty']}。${arg['author']}。${arg['content'].toString().replaceAll("<.*?>", "")}";
-                    await tts(text);
-                  },
-                  child: Icon(Icons.play_circle, size: 35),
-                ),
-                GestureDetector(
-                  onTap: () {},
-                  child: Icon(Icons.pause_circle, size: 35),
-                ),
+                if (!_playing)
+                  GestureDetector(
+                    onTap: () async {
+                      var text =
+                          "${arg['title']}。${arg['dynasty']}。${arg['author']}。${arg['content'].toString().replaceAll("<.*?>", "")}";
+                      await tts(text);
+                    },
+                    child: Icon(Icons.play_circle, size: 35),
+                  ),
+                if (_playing)
+                  GestureDetector(
+                    onTap: () async {
+                      await _player.stop();
+                    },
+                    child: Icon(Icons.stop_circle, size: 35),
+                  ),
               ],
             ),
             SizedBox(height: 5),
@@ -294,14 +318,14 @@ class _DetailPageState extends State<DetailPage> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      GestureDetector(
-                        onTap: () {},
-                        child: Icon(Icons.play_circle, size: 35),
-                      ),
-                      GestureDetector(
-                        onTap: () {},
-                        child: Icon(Icons.pause_circle, size: 35),
-                      ),
+                      // GestureDetector(
+                      //   onTap: () {},
+                      //   child: Icon(Icons.play_circle, size: 35),
+                      // ),
+                      // GestureDetector(
+                      //   onTap: () {},
+                      //   child: Icon(Icons.stop_circle, size: 35),
+                      // ),
                     ],
                   ),
                   Container(
@@ -326,14 +350,14 @@ class _DetailPageState extends State<DetailPage> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      GestureDetector(
-                        onTap: () {},
-                        child: Icon(Icons.play_circle, size: 35),
-                      ),
-                      GestureDetector(
-                        onTap: () {},
-                        child: Icon(Icons.pause_circle, size: 35),
-                      ),
+                      // GestureDetector(
+                      //   onTap: () {},
+                      //   child: Icon(Icons.play_circle, size: 35),
+                      // ),
+                      // GestureDetector(
+                      //   onTap: () {},
+                      //   child: Icon(Icons.stop_circle, size: 35),
+                      // ),
                     ],
                   ),
                   Container(
@@ -385,10 +409,134 @@ class _DetailPageState extends State<DetailPage> {
   }
 }
 
+class SettingsPage extends StatefulWidget {
+  const SettingsPage({super.key});
+
+  @override
+  State<StatefulWidget> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  List<String> _voiceItems = [];
+  var _voiceName = "zh-CN-XiaoxiaoNeural";
+  var _pitch = "0";
+  var _rate = "0";
+  var _volume = "0";
+
+  @override
+  void initState() {
+    super.initState();
+    TTSClient.voiceList().then((data) {
+      setState(() {
+        for (var item in data) {
+          _voiceItems.add("${item["ShortName"]},${item["Gender"]}");
+        }
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("音色设置")),
+      body: Container(
+        margin: EdgeInsets.all(15),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            DropdownButtonFormField(
+              isExpanded: true,
+              decoration: InputDecoration(
+                labelText: '选择发音人',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              items:
+                  _voiceItems.map((value) {
+                    return DropdownMenuItem(value: value, child: Text(value));
+                  }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _voiceName = value.toString();
+                });
+              },
+              // value: DropdownMenuItem(
+              //   value: _voiceName,
+              //   child: Text(_voiceName),
+              // ),
+            ),
+            SizedBox(height: 10),
+            TextFormField(
+              decoration: InputDecoration(
+                labelText: "请输入音调大小(-100 - 100)",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              keyboardType: TextInputType.numberWithOptions(
+                signed: true,
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^(-?\d+)')),
+              ],
+              onChanged: (v) {
+                setState(() {
+                  _pitch = v;
+                });
+              },
+              initialValue: _pitch,
+            ),
+            SizedBox(height: 10),
+            TextFormField(
+              decoration: InputDecoration(
+                labelText: "请输入速度大小(-100 - 100)",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onChanged: (v) {
+                setState(() {
+                  _rate = v;
+                });
+              },
+              initialValue: _rate,
+            ),
+            SizedBox(height: 10),
+            TextFormField(
+              decoration: InputDecoration(
+                labelText: "请输入音量大小(0 - 100)",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onChanged: (v) {
+                setState(() {
+                  _volume = v;
+                });
+              },
+              initialValue: _volume,
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(onPressed: () {}, child: Text("试听")),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 Future<Map<String, dynamic>> search(String keyword) async {
   var response = await http.get(
     Uri.parse("$base/gushi?q=${Uri.encodeComponent(keyword)}"),
   );
   var result = jsonDecode(utf8.decode(response.bodyBytes));
   return result;
+}
+
+Future<String> generateFilename(String filename) async {
+  final Directory dir = await getApplicationDocumentsDirectory();
+  return p.join(dir.path, filename);
 }
