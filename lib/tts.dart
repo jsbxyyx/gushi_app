@@ -161,6 +161,7 @@ class TTSClient {
       } else if (data is String) {
         if (data.contains("turn.end")) {
           completer.complete(result);
+          socket.close(1000);
         }
       }
     }, onError: (error) => print(error));
