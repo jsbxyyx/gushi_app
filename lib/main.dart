@@ -240,9 +240,7 @@ class _DetailPageState extends State<DetailPage> {
       return;
     } else {
       var audioData = await TTSClient.tts(text);
-      var sink = file.openWrite();
-      sink.add(audioData);
-      await sink.close();
+      await writeFile(filename, audioData);
       await _player.play(DeviceFileSource(filename));
     }
   }
@@ -417,11 +415,12 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  List<String> _voiceItems = [];
+  List<Map<String, dynamic>> _voiceItems = [];
   var _voiceName = "zh-CN-XiaoxiaoNeural";
   var _pitch = "0";
   var _rate = "0";
   var _volume = "0";
+  var _content = "今天天气真好";
 
   @override
   void initState() {
@@ -429,7 +428,7 @@ class _SettingsPageState extends State<SettingsPage> {
     TTSClient.voiceList().then((data) {
       setState(() {
         for (var item in data) {
-          _voiceItems.add("${item["ShortName"]},${item["Gender"]}");
+          _voiceItems.add(item);
         }
       });
     });
@@ -454,18 +453,18 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
               items:
-                  _voiceItems.map((value) {
-                    return DropdownMenuItem(value: value, child: Text(value));
+                  _voiceItems.map((item) {
+                    return DropdownMenuItem(
+                      value: item["ShortName"],
+                      child: Text("${item["ShortName"]} ${item["Gender"]}"),
+                    );
                   }).toList(),
               onChanged: (value) {
                 setState(() {
                   _voiceName = value.toString();
                 });
               },
-              // value: DropdownMenuItem(
-              //   value: _voiceName,
-              //   child: Text(_voiceName),
-              // ),
+              value: _voiceName,
             ),
             SizedBox(height: 10),
             TextFormField(
@@ -484,7 +483,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ],
               onChanged: (v) {
                 setState(() {
-                  _pitch = v;
+                  if (v.trim().isNotEmpty) _pitch = v;
                 });
               },
               initialValue: _pitch,
@@ -497,9 +496,16 @@ class _SettingsPageState extends State<SettingsPage> {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
+              keyboardType: TextInputType.numberWithOptions(
+                signed: true,
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^(-?\d+)')),
+              ],
               onChanged: (v) {
                 setState(() {
-                  _rate = v;
+                  if (v.trim().isNotEmpty) _rate = v;
                 });
               },
               initialValue: _rate,
@@ -512,15 +518,56 @@ class _SettingsPageState extends State<SettingsPage> {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
+              keyboardType: TextInputType.numberWithOptions(
+                signed: true,
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^(\d+)')),
+              ],
               onChanged: (v) {
                 setState(() {
-                  _volume = v;
+                  if (v.trim().isNotEmpty) _volume = v;
                 });
               },
               initialValue: _volume,
             ),
             SizedBox(height: 10),
-            ElevatedButton(onPressed: () {}, child: Text("试听")),
+            TextFormField(
+              decoration: InputDecoration(
+                labelText: "请输入文本",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              minLines: 2,
+              maxLines: 2,
+              initialValue: _content,
+              onChanged: (v) {
+                setState(() {
+                  if (v.trim().isNotEmpty) _content = v;
+                });
+              },
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () async {
+                var player = AudioPlayer();
+                var audioData = await TTSClient.tts(
+                  _content,
+                  voiceName: _voiceName,
+                  pitch: _pitch,
+                  rate: _rate,
+                  volume: _volume,
+                );
+                var filename = await generateFilename(
+                  "${DateTime.now().millisecondsSinceEpoch.toString()}.mp3",
+                );
+                await writeFile(filename, audioData);
+                await player.play(DeviceFileSource(filename));
+              },
+              child: Text("试听"),
+            ),
           ],
         ),
       ),
@@ -539,4 +586,10 @@ Future<Map<String, dynamic>> search(String keyword) async {
 Future<String> generateFilename(String filename) async {
   final Directory dir = await getApplicationDocumentsDirectory();
   return p.join(dir.path, filename);
+}
+
+Future<void> writeFile(String filename, List<int> data) async {
+  var sink = File(filename).openWrite();
+  sink.add(data);
+  await sink.close();
 }

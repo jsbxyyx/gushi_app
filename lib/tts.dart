@@ -114,6 +114,7 @@ class TTSClient {
 
   static Future<List<int>> tts(
     String text, {
+    String voiceName = "zh-CN-XiaoxiaoNeural",
     String pitch = "+0Hz",
     String rate = "+0%",
     String volume = "+0%",
@@ -142,7 +143,7 @@ class TTSClient {
             "Content-Type:application/ssml+xml\r\n"
             "X-Timestamp:${date()}Z\r\n"
             "Path:ssml\r\n\r\n"
-            "${mkssml(text, pitch: pitch, rate: rate, volume: volume)}";
+            "${mkssml(text, voiceName: voiceName,pitch: pitch, rate: rate, volume: volume)}";
         socket.send(ssml_data);
       }
     });
@@ -168,7 +169,7 @@ class TTSClient {
   static Future<List<dynamic>> voiceList() async {
     var response = await http.get(
       Uri.parse(voice_list_url),
-      headers: voice_headers
+      headers: voice_headers,
     );
     var result = jsonDecode(utf8.decode(response.bodyBytes));
     return result;
