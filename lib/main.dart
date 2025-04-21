@@ -556,9 +556,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 var audioData = await TTSClient.tts(
                   _content,
                   voiceName: _voiceName,
-                  pitch: _pitch,
-                  rate: _rate,
-                  volume: _volume,
+                  pitch: "${_pitch}Hz",
+                  rate: "$_rate%",
+                  volume: "$_volume%",
                 );
                 var filename = await generateFilename(
                   "${DateTime.now().millisecondsSinceEpoch.toString()}.mp3",

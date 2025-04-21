@@ -145,6 +145,8 @@ class TTSClient {
             "Path:ssml\r\n\r\n"
             "${mkssml(text, voiceName: voiceName,pitch: pitch, rate: rate, volume: volume)}";
         socket.send(ssml_data);
+      } else if (state is Disconnected) {
+        print("state.code : ${state.code}");
       }
     });
 
