@@ -70,9 +70,9 @@ class TTSClient {
     String text, {
     String lang = "en-US",
     String voiceName = "zh-CN-XiaoxiaoNeural",
-    String pitch = "+0Hz",
-    String rate = "+0%",
-    String volume = "+0%",
+    String pitch = "0Hz",
+    String rate = "0%",
+    String volume = "0%",
   }) {
     return "<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='$lang'>"
         "<voice name='$voiceName'>"
@@ -115,9 +115,9 @@ class TTSClient {
   static Future<List<int>> tts(
     String text, {
     String voiceName = "zh-CN-XiaoxiaoNeural",
-    String pitch = "+0Hz",
-    String rate = "+0%",
-    String volume = "+0%",
+    String pitch = "0Hz",
+    String rate = "0%",
+    String volume = "0%",
   }) async {
     var url = _connect_url();
     var socket = WebSocket(Uri.parse(url), headers: _wss_headers);

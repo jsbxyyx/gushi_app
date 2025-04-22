@@ -234,9 +234,9 @@ class _DetailPageState extends State<DetailPage> {
 
     var toneConfig = await readFileJson(await generateFilename(_tone_json));
     var voiceName = toneConfig["voiceName"]?? TTSClient.default_voice;
-    var pitch = toneConfig["pitch"]?? "+0";
-    var rate = toneConfig["rate"]?? "+0";
-    var volume = toneConfig["volume"]?? "+0";
+    var pitch = toneConfig["pitch"]?? "0";
+    var rate = toneConfig["rate"]?? "0";
+    var volume = toneConfig["volume"]?? "0";
 
     var filename = await generateFilename(
       "${arg['title']}-${arg['dynasty']}-${arg["author"]}-$voiceName-$pitch-$rate-$volume.mp3",
