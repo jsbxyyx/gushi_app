@@ -233,10 +233,10 @@ class _DetailPageState extends State<DetailPage> {
     await _player.stop();
 
     var toneConfig = await readFileJson(await generateFilename(_tone_json));
-    var voiceName = toneConfig["voiceName"]?? TTSClient.default_voice;
-    var pitch = toneConfig["pitch"]?? "0";
-    var rate = toneConfig["rate"]?? "0";
-    var volume = toneConfig["volume"]?? "0";
+    var voiceName = toneConfig["voiceName"] ?? TTSClient.default_voice;
+    var pitch = toneConfig["pitch"] ?? "0";
+    var rate = toneConfig["rate"] ?? "0";
+    var volume = toneConfig["volume"] ?? "0";
 
     var filename = await generateFilename(
       "${arg['title']}-${arg['dynasty']}-${arg["author"]}-$voiceName-$pitch-$rate-$volume.mp3",
@@ -247,7 +247,13 @@ class _DetailPageState extends State<DetailPage> {
       await _player.play(DeviceFileSource(filename));
       return;
     } else {
-      var audioData = await TTSClient.tts(text, voiceName: voiceName, pitch: "${pitch}Hz", rate: "$rate%", volume: "$volume%");
+      var audioData = await TTSClient.tts(
+        text,
+        voiceName: voiceName,
+        pitch: "${pitch}Hz",
+        rate: "$rate%",
+        volume: "$volume%",
+      );
       await writeFile(filename, audioData);
       await _player.play(DeviceFileSource(filename));
     }
@@ -271,8 +277,16 @@ class _DetailPageState extends State<DetailPage> {
                 if (!_playing)
                   GestureDetector(
                     onTap: () async {
+                      var newContent = arg['content']
+                          .toString()
+                          .replaceAll(RegExp(r"<.*?>"), "")
+                          .replaceAll(RegExp(r"[(（].*?[)）]"), "")
+                          .replaceAll("\n\n", "");
                       var text =
-                          "${arg['title']}。${arg['dynasty']}。${arg['author']}。${arg['content'].toString().replaceAll("<.*?>", "")}";
+                          "${arg['title']}。"
+                          "${arg['dynasty']}。"
+                          "${arg['author']}。"
+                          "$newContent";
                       await tts(text);
                     },
                     child: Icon(Icons.play_circle, size: 35),
@@ -675,7 +689,9 @@ class _SettingsPageState extends State<SettingsPage> {
                               }),
                             ),
                           );
-                          print("save $_tone_json => $_voiceName : $pitch : $rate : $volume");
+                          print(
+                            "save $_tone_json => $_voiceName : $pitch : $rate : $volume",
+                          );
                         }
                       },
                       child: Text("使用"),
@@ -719,4 +735,3 @@ Future<Map<String, dynamic>> readFileJson(String filename) async {
   String str = await File(filename).readAsString();
   return jsonDecode(str);
 }
-
