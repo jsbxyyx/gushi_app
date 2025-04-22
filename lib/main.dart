@@ -232,8 +232,14 @@ class _DetailPageState extends State<DetailPage> {
     await _init();
     await _player.stop();
 
+    var toneConfig = await readFileJson(await generateFilename(_tone_json));
+    var voiceName = toneConfig["voiceName"]?? TTSClient.default_voice;
+    var pitch = toneConfig["pitch"]?? "+0";
+    var rate = toneConfig["rate"]?? "+0";
+    var volume = toneConfig["volume"]?? "+0";
+
     var filename = await generateFilename(
-      "${arg['title']}-${arg['dynasty']}-${arg["author"]}.mp3",
+      "${arg['title']}-${arg['dynasty']}-${arg["author"]}-$voiceName-$pitch-$rate-$volume.mp3",
     );
     print("filename: $filename");
     var file = File(filename);
@@ -241,11 +247,6 @@ class _DetailPageState extends State<DetailPage> {
       await _player.play(DeviceFileSource(filename));
       return;
     } else {
-      var toneConfig = await readFileJson(await generateFilename(_tone_json));
-      var voiceName = toneConfig["voiceName"]?? "zh-CN-XiaoxiaoNeural";
-      var pitch = toneConfig["pitch"]?? "+0";
-      var rate = toneConfig["rate"]?? "+0";
-      var volume = toneConfig["volume"]?? "+0";
       var audioData = await TTSClient.tts(text, voiceName: voiceName, pitch: "${pitch}Hz", rate: "$rate%", volume: "$volume%");
       await writeFile(filename, audioData);
       await _player.play(DeviceFileSource(filename));
@@ -424,12 +425,13 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   List<Map<String, dynamic>> _voiceItems = [];
   var _voiceName = "zh-CN-XiaoxiaoNeural";
-  var _pitch = "0";
-  var _rate = "0";
-  var _volume = "0";
-  var _content = "今天天气真好";
 
   final _formKey = GlobalKey<FormState>();
+
+  late var _pitchController = TextEditingController(text: "0");
+  late var _rateController = TextEditingController(text: "0");
+  late var _volumeController = TextEditingController(text: "0");
+  late var _contentController = TextEditingController(text: "今天天气真好");
 
   @override
   void initState() {
@@ -438,19 +440,18 @@ class _SettingsPageState extends State<SettingsPage> {
     readToneConfig();
   }
 
-  void readToneConfig() {
-    generateFilename(_tone_json).then((filename) {
-      if (File(filename).existsSync()) {
-        readFileJson(filename).then((data) {
-          setState(() {
-            _voiceName = data["voiceName"];
-            _pitch = data["pitch"];
-            _rate = data["rate"];
-            _volume = data["volume"];
-          });
-        });
-      }
-    });
+  Future<void> readToneConfig() async {
+    var filename = await generateFilename(_tone_json);
+    if (await File(filename).exists()) {
+      var data = await readFileJson(filename);
+      print("read $_tone_json : $data");
+      setState(() {
+        _voiceName = data["voiceName"];
+        _pitchController.text = data["pitch"];
+        _rateController.text = data["rate"];
+        _volumeController.text = data["volume"];
+      });
+    }
   }
 
   void fetchVoiceList() {
@@ -513,6 +514,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 SizedBox(height: 10),
                 TextFormField(
+                  controller: _pitchController,
                   decoration: InputDecoration(
                     labelText: "请输入音调大小(-100 - 100)",
                     border: OutlineInputBorder(
@@ -528,10 +530,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   ],
                   onChanged: (v) {
                     setState(() {
-                      _pitch = v;
+                      _pitchController.text = v.toString();
                     });
                   },
-                  initialValue: _pitch,
                   validator: (v) {
                     if (v == null || v.toString().trim() == "") {
                       return "请输入音调";
@@ -541,6 +542,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 SizedBox(height: 10),
                 TextFormField(
+                  controller: _rateController,
                   decoration: InputDecoration(
                     labelText: "请输入速度大小(-100 - 100)",
                     border: OutlineInputBorder(
@@ -556,10 +558,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   ],
                   onChanged: (v) {
                     setState(() {
-                      _rate = v;
+                      _rateController.text = v.toString();
                     });
                   },
-                  initialValue: _rate,
                   validator: (v) {
                     if (v == null || v.toString().trim() == "") {
                       return "请输入速度";
@@ -569,6 +570,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 SizedBox(height: 10),
                 TextFormField(
+                  controller: _volumeController,
                   decoration: InputDecoration(
                     labelText: "请输入音量大小(0 - 100)",
                     border: OutlineInputBorder(
@@ -584,10 +586,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   ],
                   onChanged: (v) {
                     setState(() {
-                      _volume = v;
+                      _volumeController.text = v.toString();
                     });
                   },
-                  initialValue: _volume,
                   validator: (v) {
                     if (v == null || v.toString().trim() == "") {
                       return "请输入音量";
@@ -597,6 +598,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 SizedBox(height: 10),
                 TextFormField(
+                  controller: _contentController,
                   decoration: InputDecoration(
                     labelText: "请输入文本",
                     border: OutlineInputBorder(
@@ -605,10 +607,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   minLines: 2,
                   maxLines: 2,
-                  initialValue: _content,
                   onChanged: (v) {
                     setState(() {
-                      _content = v;
+                      _contentController.text = v.toString();
                     });
                   },
                   validator: (v) {
@@ -627,11 +628,11 @@ class _SettingsPageState extends State<SettingsPage> {
                         if (_formKey.currentState!.validate()) {
                           var player = AudioPlayer();
                           var audioData = await TTSClient.tts(
-                            _content,
+                            _contentController.text,
                             voiceName: _voiceName,
-                            pitch: "${_pitch}Hz",
-                            rate: "$_rate%",
-                            volume: "$_volume%",
+                            pitch: "${_pitchController.text}Hz",
+                            rate: "${_rateController.text}%",
+                            volume: "${_volumeController.text}%",
                           );
                           var filename = await generateFilename(
                             "${DateTime.now().millisecondsSinceEpoch.toString()}.mp3",
@@ -649,18 +650,21 @@ class _SettingsPageState extends State<SettingsPage> {
                           if (!await File(filename).exists()) {
                             await File(filename).create();
                           }
+                          var pitch = _pitchController.text;
+                          var rate = _rateController.text;
+                          var volume = _volumeController.text;
                           await writeFile(
                             filename,
                             utf8.encode(
                               jsonEncode({
                                 "voiceName": _voiceName,
-                                "pitch": _pitch,
-                                "rate": _rate,
-                                "volume": _volume,
+                                "pitch": pitch,
+                                "rate": rate,
+                                "volume": volume,
                               }),
                             ),
                           );
-                          print("save tone.json => $_voiceName : $_pitch : $_rate : $_volume");
+                          print("save $_tone_json => $_voiceName : $pitch : $rate : $volume");
                         }
                       },
                       child: Text("使用"),
@@ -690,12 +694,14 @@ Future<String> generateFilename(String filename) async {
 }
 
 Future<void> writeFile(String filename, List<int> data) async {
+  print("write $filename");
   var sink = File(filename).openWrite();
   sink.add(data);
   await sink.close();
 }
 
 Future<Map<String, dynamic>> readFileJson(String filename) async {
+  print("read $filename");
   if (!await File(filename).exists()) {
     return {};
   }
