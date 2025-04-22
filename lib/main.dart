@@ -14,6 +14,8 @@ import './ba.dart';
 final __a = String.fromCharCodes(Ba.abtoa("d3gu:j!w:\$!w:\$!x.nh5eg=="));
 final base = "https://$__a";
 
+final _tone_json = "tone.json";
+
 void main() {
   runApp(const MyApp());
 }
@@ -239,7 +241,12 @@ class _DetailPageState extends State<DetailPage> {
       await _player.play(DeviceFileSource(filename));
       return;
     } else {
-      var audioData = await TTSClient.tts(text);
+      var toneConfig = await readFileJson(await generateFilename(_tone_json));
+      var voiceName = toneConfig["voiceName"]?? "zh-CN-XiaoxiaoNeural";
+      var pitch = toneConfig["pitch"]?? "+0";
+      var rate = toneConfig["rate"]?? "+0";
+      var volume = toneConfig["volume"]?? "+0";
+      var audioData = await TTSClient.tts(text, voiceName: voiceName, pitch: "${pitch}Hz", rate: "$rate%", volume: "$volume%");
       await writeFile(filename, audioData);
       await _player.play(DeviceFileSource(filename));
     }
@@ -428,6 +435,22 @@ class _SettingsPageState extends State<SettingsPage> {
   void initState() {
     super.initState();
     fetchVoiceList();
+    readToneConfig();
+  }
+
+  void readToneConfig() {
+    generateFilename(_tone_json).then((filename) {
+      if (File(filename).existsSync()) {
+        readFileJson(filename).then((data) {
+          setState(() {
+            _voiceName = data["voiceName"];
+            _pitch = data["pitch"];
+            _rate = data["rate"];
+            _volume = data["volume"];
+          });
+        });
+      }
+    });
   }
 
   void fetchVoiceList() {
@@ -469,14 +492,12 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                   ),
                   items:
-                  _voiceItems.map((item) {
-                    return DropdownMenuItem(
-                      value: item["ShortName"],
-                      child: Text(
-                        "${item["ShortName"]} ${item["Gender"]}",
-                      ),
-                    );
-                  }).toList(),
+                      _voiceItems.map((item) {
+                        return DropdownMenuItem(
+                          value: item["ShortName"],
+                          child: Text("${item["ShortName"]} ${item["Gender"]}"),
+                        );
+                      }).toList(),
                   onChanged: (value) {
                     setState(() {
                       _voiceName = value.toString();
@@ -598,25 +619,53 @@ class _SettingsPageState extends State<SettingsPage> {
                   },
                 ),
                 SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      var player = AudioPlayer();
-                      var audioData = await TTSClient.tts(
-                        _content,
-                        voiceName: _voiceName,
-                        pitch: "${_pitch}Hz",
-                        rate: "$_rate%",
-                        volume: "$_volume%",
-                      );
-                      var filename = await generateFilename(
-                        "${DateTime.now().millisecondsSinceEpoch.toString()}.mp3",
-                      );
-                      await writeFile(filename, audioData);
-                      await player.play(DeviceFileSource(filename));
-                    }
-                  },
-                  child: Text("试听"),
+                Wrap(
+                  spacing: 10,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () async {
+                        if (_formKey.currentState!.validate()) {
+                          var player = AudioPlayer();
+                          var audioData = await TTSClient.tts(
+                            _content,
+                            voiceName: _voiceName,
+                            pitch: "${_pitch}Hz",
+                            rate: "$_rate%",
+                            volume: "$_volume%",
+                          );
+                          var filename = await generateFilename(
+                            "${DateTime.now().millisecondsSinceEpoch.toString()}.mp3",
+                          );
+                          await writeFile(filename, audioData);
+                          await player.play(DeviceFileSource(filename));
+                        }
+                      },
+                      child: Text("试听"),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        if (_formKey.currentState!.validate()) {
+                          var filename = await generateFilename(_tone_json);
+                          if (!await File(filename).exists()) {
+                            await File(filename).create();
+                          }
+                          await writeFile(
+                            filename,
+                            utf8.encode(
+                              jsonEncode({
+                                "voiceName": _voiceName,
+                                "pitch": _pitch,
+                                "rate": _rate,
+                                "volume": _volume,
+                              }),
+                            ),
+                          );
+                          print("save tone.json => $_voiceName : $_pitch : $_rate : $_volume");
+                        }
+                      },
+                      child: Text("使用"),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -645,3 +694,12 @@ Future<void> writeFile(String filename, List<int> data) async {
   sink.add(data);
   await sink.close();
 }
+
+Future<Map<String, dynamic>> readFileJson(String filename) async {
+  if (!await File(filename).exists()) {
+    return {};
+  }
+  String str = await File(filename).readAsString();
+  return jsonDecode(str);
+}
+
