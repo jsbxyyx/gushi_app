@@ -433,11 +433,21 @@ class _SettingsPageState extends State<SettingsPage> {
   late var _volumeController = TextEditingController(text: "0");
   late var _contentController = TextEditingController(text: "今天天气真好");
 
+  late final AudioPlayer _player;
+  bool _isInitialized = false;
+
   @override
   void initState() {
     super.initState();
     fetchVoiceList();
     readToneConfig();
+  }
+
+  Future<void> _init() async {
+    if (!_isInitialized) {
+      _player = AudioPlayer();
+      _isInitialized = true;
+    }
   }
 
   Future<void> readToneConfig() async {
@@ -626,7 +636,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     ElevatedButton(
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          var player = AudioPlayer();
                           var audioData = await TTSClient.tts(
                             _contentController.text,
                             voiceName: _voiceName,
@@ -638,7 +647,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             "${DateTime.now().millisecondsSinceEpoch.toString()}.mp3",
                           );
                           await writeFile(filename, audioData);
-                          await player.play(DeviceFileSource(filename));
+                          await _init();
+                          await _player.stop();
+                          await _player.play(DeviceFileSource(filename));
                         }
                       },
                       child: Text("试听"),
