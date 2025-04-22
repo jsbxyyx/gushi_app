@@ -422,11 +422,18 @@ class _SettingsPageState extends State<SettingsPage> {
   var _volume = "0";
   var _content = "今天天气真好";
 
+  final _formKey = GlobalKey<FormState>();
+
   @override
   void initState() {
     super.initState();
+    fetchVoiceList();
+  }
+
+  void fetchVoiceList() {
     TTSClient.voiceList().then((data) {
       setState(() {
+        _voiceItems.clear();
         for (var item in data) {
           _voiceItems.add(item);
         }
@@ -438,137 +445,182 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("音色设置")),
-      body: Container(
-        margin: EdgeInsets.all(15),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            DropdownButtonFormField(
-              isExpanded: true,
-              decoration: InputDecoration(
-                labelText: '选择发音人',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              items:
+      body: SingleChildScrollView(
+        child: Container(
+          margin: EdgeInsets.all(15),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                DropdownButtonFormField(
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    labelText: '选择发音人',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        fetchVoiceList();
+                      },
+                      icon: Icon(Icons.refresh_outlined),
+                    ),
+                  ),
+                  items:
                   _voiceItems.map((item) {
                     return DropdownMenuItem(
                       value: item["ShortName"],
-                      child: Text("${item["ShortName"]} ${item["Gender"]}"),
+                      child: Text(
+                        "${item["ShortName"]} ${item["Gender"]}",
+                      ),
                     );
                   }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _voiceName = value.toString();
-                });
-              },
-              value: _voiceName,
-            ),
-            SizedBox(height: 10),
-            TextFormField(
-              decoration: InputDecoration(
-                labelText: "请输入音调大小(-100 - 100)",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  onChanged: (value) {
+                    setState(() {
+                      _voiceName = value.toString();
+                    });
+                  },
+                  value: _voiceName,
+                  validator: (v) {
+                    if (v == null || v.toString().trim() == "") {
+                      return "请选择发音人";
+                    }
+                    return null;
+                  },
                 ),
-              ),
-              keyboardType: TextInputType.numberWithOptions(
-                signed: true,
-                decimal: true,
-              ),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^(-?\d+)')),
+                SizedBox(height: 10),
+                TextFormField(
+                  decoration: InputDecoration(
+                    labelText: "请输入音调大小(-100 - 100)",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  keyboardType: TextInputType.numberWithOptions(
+                    signed: true,
+                    decimal: true,
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^(-?\d+)')),
+                  ],
+                  onChanged: (v) {
+                    setState(() {
+                      _pitch = v;
+                    });
+                  },
+                  initialValue: _pitch,
+                  validator: (v) {
+                    if (v == null || v.toString().trim() == "") {
+                      return "请输入音调";
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 10),
+                TextFormField(
+                  decoration: InputDecoration(
+                    labelText: "请输入速度大小(-100 - 100)",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  keyboardType: TextInputType.numberWithOptions(
+                    signed: true,
+                    decimal: true,
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^(-?\d+)')),
+                  ],
+                  onChanged: (v) {
+                    setState(() {
+                      _rate = v;
+                    });
+                  },
+                  initialValue: _rate,
+                  validator: (v) {
+                    if (v == null || v.toString().trim() == "") {
+                      return "请输入速度";
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 10),
+                TextFormField(
+                  decoration: InputDecoration(
+                    labelText: "请输入音量大小(0 - 100)",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  keyboardType: TextInputType.numberWithOptions(
+                    signed: true,
+                    decimal: true,
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^(\d+)')),
+                  ],
+                  onChanged: (v) {
+                    setState(() {
+                      _volume = v;
+                    });
+                  },
+                  initialValue: _volume,
+                  validator: (v) {
+                    if (v == null || v.toString().trim() == "") {
+                      return "请输入音量";
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 10),
+                TextFormField(
+                  decoration: InputDecoration(
+                    labelText: "请输入文本",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  minLines: 2,
+                  maxLines: 2,
+                  initialValue: _content,
+                  onChanged: (v) {
+                    setState(() {
+                      _content = v;
+                    });
+                  },
+                  validator: (v) {
+                    if (v == null || v.toString().trim() == "") {
+                      return "请输入文本";
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      var player = AudioPlayer();
+                      var audioData = await TTSClient.tts(
+                        _content,
+                        voiceName: _voiceName,
+                        pitch: "${_pitch}Hz",
+                        rate: "$_rate%",
+                        volume: "$_volume%",
+                      );
+                      var filename = await generateFilename(
+                        "${DateTime.now().millisecondsSinceEpoch.toString()}.mp3",
+                      );
+                      await writeFile(filename, audioData);
+                      await player.play(DeviceFileSource(filename));
+                    }
+                  },
+                  child: Text("试听"),
+                ),
               ],
-              onChanged: (v) {
-                setState(() {
-                  if (v.trim().isNotEmpty) _pitch = v;
-                });
-              },
-              initialValue: _pitch,
             ),
-            SizedBox(height: 10),
-            TextFormField(
-              decoration: InputDecoration(
-                labelText: "请输入速度大小(-100 - 100)",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              keyboardType: TextInputType.numberWithOptions(
-                signed: true,
-                decimal: true,
-              ),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^(-?\d+)')),
-              ],
-              onChanged: (v) {
-                setState(() {
-                  if (v.trim().isNotEmpty) _rate = v;
-                });
-              },
-              initialValue: _rate,
-            ),
-            SizedBox(height: 10),
-            TextFormField(
-              decoration: InputDecoration(
-                labelText: "请输入音量大小(0 - 100)",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              keyboardType: TextInputType.numberWithOptions(
-                signed: true,
-                decimal: true,
-              ),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^(\d+)')),
-              ],
-              onChanged: (v) {
-                setState(() {
-                  if (v.trim().isNotEmpty) _volume = v;
-                });
-              },
-              initialValue: _volume,
-            ),
-            SizedBox(height: 10),
-            TextFormField(
-              decoration: InputDecoration(
-                labelText: "请输入文本",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              minLines: 2,
-              maxLines: 2,
-              initialValue: _content,
-              onChanged: (v) {
-                setState(() {
-                  if (v.trim().isNotEmpty) _content = v;
-                });
-              },
-            ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () async {
-                var player = AudioPlayer();
-                var audioData = await TTSClient.tts(
-                  _content,
-                  voiceName: _voiceName,
-                  pitch: "${_pitch}Hz",
-                  rate: "$_rate%",
-                  volume: "$_volume%",
-                );
-                var filename = await generateFilename(
-                  "${DateTime.now().millisecondsSinceEpoch.toString()}.mp3",
-                );
-                await writeFile(filename, audioData);
-                await player.play(DeviceFileSource(filename));
-              },
-              child: Text("试听"),
-            ),
-          ],
+          ),
         ),
       ),
     );
