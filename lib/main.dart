@@ -8,7 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import './tts.dart';
-
+import './tf.dart';
 import './ba.dart';
 
 final __a = String.fromCharCodes(Ba.abtoa("d3gu:j!w:\$!w:\$!x.nh5eg=="));
@@ -179,17 +179,6 @@ class _MyHomePageState extends State<MyHomePage>
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        child: CircleAvatar(child: Icon(Icons.settings)),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (BuildContext context) => SettingsPage(),
-            ),
-          );
-        },
-      ),
     );
   }
 
@@ -320,6 +309,7 @@ class _DetailPageState extends State<DetailPage> {
               arg['content']
                   .toString()
                   .trim()
+                  .replaceAll(RegExp(r"<.*?>"), "")
                   .replaceAll("\n\n", "")
                   .replaceAll("，", "\n")
                   .replaceAll("。", "\n"),
@@ -424,6 +414,17 @@ class _DetailPageState extends State<DetailPage> {
             SizedBox(height: 20),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: CircleAvatar(child: Icon(Icons.settings)),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (BuildContext context) => SettingsPage(),
+            ),
+          );
+        },
       ),
     );
   }
@@ -550,7 +551,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     decimal: true,
                   ),
                   inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'^(-?\d+)')),
+                    NumberTextInputFormatter(digit: 0, min: -100, max: 100),
                   ],
                   onChanged: (v) {
                     setState(() {
@@ -578,7 +579,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     decimal: true,
                   ),
                   inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'^(-?\d+)')),
+                    NumberTextInputFormatter(digit: 0, min: -100, max: 100),
                   ],
                   onChanged: (v) {
                     setState(() {
@@ -606,7 +607,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     decimal: true,
                   ),
                   inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'^(\d+)')),
+                    NumberTextInputFormatter(digit: 2, min: 0, max: 100),
                   ],
                   onChanged: (v) {
                     setState(() {

@@ -153,6 +153,7 @@ class TTSClient {
     final sep = utf8.encode("Path:audio\r\n");
 
     socket.messages.listen((data) {
+      print("data: \n$data");
       if (data is Uint8List) {
         Uint8List view = data;
         int index = _indexOf(data, sep);
