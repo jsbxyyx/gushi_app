@@ -551,7 +551,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     decimal: true,
                   ),
                   inputFormatters: [
-                    NumberTextInputFormatter(digit: 0, min: -100, max: 100),
+                    DecimalTextInputFormatter(decimalDigits: 0),
                   ],
                   onChanged: (v) {
                     setState(() {
@@ -561,6 +561,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   validator: (v) {
                     if (v == null || v.toString().trim() == "") {
                       return "请输入音调";
+                    }
+                    int? a = int.tryParse(v);
+                    if (a == null || (a < -100 || a > 100)) {
+                      return "格式不正确";
                     }
                     return null;
                   },
@@ -579,7 +583,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     decimal: true,
                   ),
                   inputFormatters: [
-                    NumberTextInputFormatter(digit: 0, min: -100, max: 100),
+                    DecimalTextInputFormatter(decimalDigits: 0),
                   ],
                   onChanged: (v) {
                     setState(() {
@@ -589,6 +593,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   validator: (v) {
                     if (v == null || v.toString().trim() == "") {
                       return "请输入速度";
+                    }
+                    int? a = int.tryParse(v);
+                    if (a == null || (a < -100 || a > 100)) {
+                      return "格式不正确";
                     }
                     return null;
                   },
@@ -607,7 +615,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     decimal: true,
                   ),
                   inputFormatters: [
-                    NumberTextInputFormatter(digit: 2, min: 0, max: 100),
+                    DecimalTextInputFormatter(decimalDigits: 0),
                   ],
                   onChanged: (v) {
                     setState(() {
@@ -617,6 +625,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   validator: (v) {
                     if (v == null || v.toString().trim() == "") {
                       return "请输入音量";
+                    }
+                    int? a = int.tryParse(v);
+                    if (a == null || (a < 0 || a > 100)) {
+                      return "格式不正确";
                     }
                     return null;
                   },
