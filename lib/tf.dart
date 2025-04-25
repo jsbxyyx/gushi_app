@@ -56,7 +56,7 @@ class DecimalTextInputFormatter extends TextInputFormatter {
 
       // 关键修改：允许保留单独的小数点
       newText = parts.length > 1
-          ? '$integerPart.${decimalPart}'
+          ? '$integerPart.$decimalPart'
           : integerPart;
     } else {
       newText = integerPart;
